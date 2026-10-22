@@ -6,6 +6,7 @@ import com.willfp.reforges.plugin
 import com.willfp.reforges.reforges.Reforge
 import com.willfp.reforges.reforges.ReforgeTarget
 import com.willfp.reforges.reforges.Reforges
+import io.papermc.paper.persistence.PersistentDataContainerView
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataContainer
@@ -18,7 +19,9 @@ private val reforgeStoneKey = plugin.namespacedKeyFactory.create("reforge_stone"
  * 从 PersistentDataContainer 读取重铸石列表（JSON 数组格式）
  * 向后兼容：如果存储的是旧版单值格式，也会正确读取
  */
-fun PersistentDataContainer.getReforges(): List<Reforge> {
+fun PersistentDataContainer.getReforges(): List<Reforge> = readReforges()
+
+private fun PersistentDataContainerView.readReforges(): List<Reforge> {
     if (!this.has(reforgeKey, PersistentDataType.STRING)) return emptyList()
     val raw = this.get(reforgeKey, PersistentDataType.STRING) ?: return emptyList()
     if (raw.isEmpty()) return emptyList()
@@ -49,7 +52,7 @@ fun PersistentDataContainer.setReforges(reforges: List<Reforge>) {
 var ItemStack?.reforges: List<Reforge>
     get() {
         this ?: return emptyList()
-        return this.fast().persistentDataContainer.getReforges()
+        return this.persistentDataContainer.readReforges()
     }
     set(value) {
         this ?: return
